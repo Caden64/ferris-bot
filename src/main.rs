@@ -62,8 +62,12 @@ async fn main() {
         // Every command invocation must pass this check to continue execution
         command_check: Some(|ctx| {
             Box::pin(async move {
-                if ctx.author().id == 123456789 {
-                    return Ok(false);
+                if var("DEBUG")? == "FALSE" {
+                    return if ctx.channel_id().get().to_string() != var("CHANNEL")? {
+                        Ok(false)
+                    } else {
+                        Ok(true)
+                    }
                 }
                 Ok(true)
             })
@@ -99,7 +103,7 @@ async fn main() {
     let token = var("DISCORD_TOKEN")
         .expect("Missing `DISCORD_TOKEN` env var, see README for more information.");
     let intents =
-        serenity::GatewayIntents::non_privileged() | serenity::GatewayIntents::MESSAGE_CONTENT;
+        serenity::GatewayIntents::non_privileged();
 
     let client = serenity::ClientBuilder::new(token, intents)
         .framework(framework)

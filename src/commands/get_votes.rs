@@ -1,7 +1,7 @@
 use crate::{Context, Error};
 
 #[poise::command(guild_only, aliases("votes"), slash_command, ephemeral)]
-pub async fn getvotes(
+pub async fn get_votes(
     ctx: Context<'_>,
     #[description = "Choice to retrieve votes for"] choice: Option<String>,
 ) -> Result<(), Error> {
