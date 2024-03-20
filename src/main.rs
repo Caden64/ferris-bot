@@ -1,13 +1,9 @@
 mod commands;
+
 use poise::serenity_prelude as serenity;
-use std::{
-    collections::HashMap,
-    env::var,
-    sync::Mutex,
-};
-use crate::commands::vote::vote;
-use crate::commands::get_votes::get_votes;
+use std::env::var;
 use crate::commands::help::help;
+use crate::commands::register::register;
 use crate::commands::scheduled::scheduled;
 use crate::commands::timer::timer;
 
@@ -17,7 +13,6 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 
 // Custom user data passed to all command functions
 pub struct Data {
-    votes: Mutex<HashMap<String, (Vec<String>, u32)>>
 }
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
@@ -44,7 +39,7 @@ async fn main() {
     // FrameworkOptions contains all of poise's configuration option in one struct
     // Every option can be omitted to use its default value
     let options = poise::FrameworkOptions {
-        commands: vec![help(), vote(), get_votes(), timer(), scheduled()],
+        commands: vec![help(), timer(), scheduled(), register()],
         // The global error handler for all error cases that may occur
         on_error: |error| Box::pin(on_error(error)),
         // This code is run before every command
@@ -64,6 +59,8 @@ async fn main() {
             Box::pin(async move {
                 if var("DEBUG")? == "FALSE" {
                     return if ctx.channel_id().get().to_string() != var("CHANNEL")? {
+                        ctx.defer_ephemeral().await?;
+                        ctx.say("Wrong Channel").await?;
                         Ok(false)
                     } else {
                         Ok(true)
@@ -92,9 +89,7 @@ async fn main() {
             Box::pin(async move {
                 println!("Logged in as {}", _ready.user.name);
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
-                Ok(Data {
-                    votes: Mutex::new(HashMap::new()),
-                })
+                Ok(Data {})
             })
         })
         .options(options)

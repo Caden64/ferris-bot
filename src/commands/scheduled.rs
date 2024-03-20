@@ -24,15 +24,17 @@ pub async fn scheduled(
     ctx: Context<'_>,
     hour: u8,
     minute: u8,
-    second: u8,
+    #[choices("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")]
+    weekdays: &'static str,
     am_or_pm: Option<AmOrPm>
 ) -> Result<(), Error> {
+    println!("{:?}", weekdays);
     let dt = Utc::now().with_timezone(&Denver);
     ctx.say(format!("{}", dt)).await?;
     let time = if am_or_pm.is_some() {
-        NaiveTime::parse_from_str(format!("{hour}:{minute}:{second} {}", am_or_pm.unwrap()).as_str(), "%I:%M:%S %p")
+        NaiveTime::parse_from_str(format!("{hour}:{minute}{}", am_or_pm.unwrap()).as_str(), "%I:%M %p")
     } else {
-        NaiveTime::parse_from_str(format!("{hour}:{minute}:{second}").as_str(), "%H:%M:%S")
+        NaiveTime::parse_from_str(format!("{hour}:{minute}").as_str(), "%H:%M")
     };
     if time.is_err() {
         ctx.say("Invalid time given").await?;
