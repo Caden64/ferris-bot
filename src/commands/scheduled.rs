@@ -40,6 +40,17 @@ pub async fn scheduled(
         ctx.say("Invalid time given").await?;
         return Ok(())
     }
-    ctx.say(format!("{}", time.unwrap())).await?;
+    let time = time.unwrap();
+    println!("Going in the loop");
+    ctx.say(format!("{}", time)).await?;
+    if time > dt.time() {
+        loop {
+            let dt = Utc::now().with_timezone(&Denver);
+            if dt.time() >= time {
+                ctx.channel_id().say(ctx.http(), "It's time!").await.unwrap();
+                break;
+            }
+        }
+    }
     Ok(())
 }
