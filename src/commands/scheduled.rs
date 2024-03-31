@@ -2,6 +2,7 @@ use std::fmt;
 
 use chrono::{NaiveTime, Utc};
 use chrono_tz::America::Denver;
+use poise::serenity_prelude::CacheHttp;
 
 use crate::{Context, Error};
 
@@ -43,14 +44,20 @@ pub async fn scheduled(
     let time = time.unwrap();
     println!("Going in the loop");
     ctx.say(format!("{}", time)).await?;
+    let cache = poise::serenity_prelude::CacheHttp::cache(&ctx).unwrap().clone();
+    let http = {ctx.http().clone().http()};
+    let guild_channel = ctx.guild_channel().await.unwrap();
     if time > dt.time() {
-        loop {
-            let dt = Utc::now().with_timezone(&Denver);
-            if dt.time() >= time {
-                ctx.channel_id().say(ctx.http(), "It's time!").await.unwrap();
-                break;
+        tokio::spawn(async move {
+            loop {
+                let dt = Utc::now().with_timezone(&Denver);
+                if dt.time() >= time {
+                    guild_channel.say((&cache, http.clone()), "It's time!").await.unwrap();
+                    // ctx.channel_id().say(ctx.http(), "It's time!").await.unwrap();
+                    break;
+                }
             }
-        }
+        });
     }
     Ok(())
 }
